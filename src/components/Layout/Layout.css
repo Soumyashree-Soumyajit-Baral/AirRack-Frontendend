@@ -1,0 +1,276 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #111827;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 100;
+  transition: width 0.22s ease;
+  overflow: hidden;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  background: #2563eb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.brand-img {
+  max-height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand-img-icon {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0.75rem;
+  gap: 0.2rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+}
+
+.nav-item--active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.nav-item--active:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.user-menu:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background: #2563eb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.user-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+.chevron {
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.chevron--open {
+  transform: rotate(180deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  bottom: calc(100% - 0.5rem);
+  left: 0.75rem;
+  right: 0.75rem;
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.4rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.dropdown-item.logout {
+  color: #f87171;
+}
+
+.dropdown-item.logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 240px;
+  padding: 2rem;
+  min-height: 100vh;
+  transition: margin-left 0.22s ease;
+}
+
+/* ── Collapsed layout ── */
+.layout--collapsed .sidebar {
+  width: 68px;
+}
+
+.layout--collapsed .main-content {
+  margin-left: 68px;
+}
+
+.layout--collapsed .sidebar-brand {
+  justify-content: center;
+  padding: 1.25rem 0 1rem;
+}
+
+.layout--collapsed .sidebar-nav {
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+}
+
+.layout--collapsed .sidebar-footer {
+  padding: 0.75rem 0.5rem;
+}
+
+.layout--collapsed .user-menu {
+  justify-content: center;
+  padding: 0.6rem 0;
+}
+
+.layout--collapsed .sidebar-collapse-row {
+  padding: 0 0.5rem;
+}
+
+/* ── Collapse button row ── */
+.sidebar-collapse-row {
+  padding: 0 0.75rem 0.5rem;
+}
+
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+}
+
+.layout--collapsed .collapse-btn {
+  justify-content: center;
+  padding: 0.55rem 0;
+}
+
+/* Collapsed nav item — center icon */
+.nav-item--collapsed {
+  justify-content: center;
+  padding: 0.65rem 0;
+}
