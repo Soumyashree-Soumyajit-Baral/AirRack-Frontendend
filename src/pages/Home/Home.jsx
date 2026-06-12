@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiSearch,
-  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin,
+  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin, FiArrowUp, FiArrowDown,
 } from 'react-icons/fi';
 import {
   getAllRecordsApi, createRecordApi, updateRecordApi, deleteRecordApi,
@@ -320,6 +320,15 @@ const Home = () => {
   const EMPTY_FILTERS = { msn: '', recordType: '', dateFrom: '', dateTo: '', boxStatus: '', condition: '' };
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
+  const SORT_OPTIONS = [
+    { key: 'srno',  label: 'Sr. No' },
+    { key: 'boxId', label: 'Box Number' },
+    { key: 'zone',  label: 'Zone' },
+  ];
+  const [sortBy, setSortBy]               = useState('srno');
+  const [showSortPicker, setShowSortPicker] = useState(false);
+  const sortPickerRef                       = useRef(null);
+
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   const recordTypeOptions = useMemo(() =>
@@ -331,6 +340,9 @@ const Home = () => {
     const handler = (e) => {
       if (whPickerRef.current && !whPickerRef.current.contains(e.target)) {
         setShowWhPicker(false);
+      }
+      if (sortPickerRef.current && !sortPickerRef.current.contains(e.target)) {
+        setShowSortPicker(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -398,6 +410,12 @@ const Home = () => {
     }
     return true;
   });
+
+  const sorted = useMemo(() => {
+    if (sortBy === 'boxId') return [...filtered].sort((a, b) => (a.boxId || '').localeCompare(b.boxId || ''));
+    if (sortBy === 'zone')  return [...filtered].sort((a, b) => (a.zone || '').localeCompare(b.zone || ''));
+    return filtered;
+  }, [filtered, sortBy]);
 
   const startEdit = (record) => {
     setEditId(record._id);
@@ -523,6 +541,31 @@ const Home = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+          </div>
+          <div className="sort-picker-wrap" ref={sortPickerRef}>
+            <button
+              className={`btn-sort ${showSortPicker ? 'btn-sort--active' : ''}`}
+              onClick={() => setShowSortPicker((v) => !v)}
+            >
+              <FiArrowUp size={13} className="sort-icon-up" />
+              <FiArrowDown size={13} className="sort-icon-down" />
+              <span>Sort: <strong>{SORT_OPTIONS.find((o) => o.key === sortBy)?.label}</strong></span>
+              <FiChevronDown size={13} className={`sort-chevron ${showSortPicker ? 'open' : ''}`} />
+            </button>
+            {showSortPicker && (
+              <div className="sort-dropdown">
+                {SORT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.key}
+                    className={`sort-option ${sortBy === opt.key ? 'active' : ''}`}
+                    onClick={() => { setSortBy(opt.key); setShowSortPicker(false); }}
+                  >
+                    {sortBy === opt.key && <span className="sort-check">✓</span>}
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <button
             className={`btn-filter ${showFilter ? 'btn-filter--active' : ''}`}
@@ -678,9 +721,9 @@ const Home = () => {
           <tbody>
             {loading ? (
               <tr><td colSpan={totalCols} className="td-center">Loading...</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <tr><td colSpan={totalCols} className="td-center td-empty">No records found.</td></tr>
-            ) : filtered.map((record, idx) => {
+            ) : sorted.map((record, idx) => {
               const isEditing = editId === record._id;
               const ed = (field) => (e) => setEditData((p) => ({ ...p, [field]: e.target.value }));
 

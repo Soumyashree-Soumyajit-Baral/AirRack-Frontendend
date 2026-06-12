@@ -755,6 +755,77 @@
 }
 .filter-clear-date:hover { background: #e5e7eb; }
 
+/* ── Sort Button ── */
+.sort-picker-wrap {
+  position: relative;
+}
+
+.btn-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  color: #374151;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn-sort:hover { background: #f9fafb; border-color: #d1d5db; }
+.btn-sort--active { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
+.btn-sort--active .sort-icon-up,
+.btn-sort--active .sort-icon-down { color: #16a34a; }
+
+.sort-icon-up  { margin-right: -5px; opacity: 0.6; }
+.sort-icon-down { opacity: 0.6; }
+
+.sort-chevron {
+  transition: transform 0.2s;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+.sort-chevron.open { transform: rotate(180deg); }
+
+.sort-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+  z-index: 200;
+  overflow: hidden;
+  padding: 0.3rem;
+}
+
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: #374151;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+  transition: background 0.12s;
+}
+.sort-option:hover { background: #f3f4f6; }
+.sort-option.active { background: #f0fdf4; color: #16a34a; font-weight: 700; }
+.sort-check { font-size: 0.8rem; color: #16a34a; margin-right: 2px; }
+
 /* ── Delete Logs Button ── */
 .btn-delete-logs {
   display: flex;
