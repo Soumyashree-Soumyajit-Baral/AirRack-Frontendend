@@ -259,7 +259,7 @@
 .td-nowrap { white-space: nowrap; }
 .td-center { text-align: center; padding: 2rem; color: #9ca3af; }
 .td-empty { font-size: 0.85rem; }
-.td-remarks { max-width: 160px; white-space: normal; word-break: break-word; font-size: 0.78rem; color: #6b7280; }
+.td-remarks { min-width: 220px; max-width: 300px; white-space: normal; word-break: break-word; font-size: 0.78rem; color: #6b7280; }
 .td-muted { color: #9ca3af; font-size: 0.75rem; }
 
 /* Badges */
