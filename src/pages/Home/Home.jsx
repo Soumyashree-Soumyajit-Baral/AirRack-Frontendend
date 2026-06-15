@@ -13,7 +13,7 @@ import './Home.css';
 
 const EMPTY_FORM = {
   boxId: '', aircraftType: '', aircraftRegistration: '', msn: '',
-  recordType: '', dateRangeFrom: '', dateRangeTo: '',
+  recordType: '', recordDescription: '', dateRangeFrom: '', dateRangeTo: '',
   zone: '', aisle: '', rack: '', level: '',
   boxStatus: 'Active', condition: 'Good',
   lastMovementDate: '', issuedTo: '', returnDueDate: '', remarks: '',
@@ -425,6 +425,7 @@ const Home = () => {
       aircraftRegistration: record.aircraftRegistration || '',
       msn: record.msn || '',
       recordType: record.recordType || '',
+      recordDescription: record.recordDescription || '',
       dateRangeFrom: toInputDate(record.dateRangeFrom),
       dateRangeTo: toInputDate(record.dateRangeTo),
       zone: record.zone || '',
@@ -488,7 +489,7 @@ const Home = () => {
     }
   };
 
-  const totalCols = canManage ? 19 : 18;
+  const totalCols = canManage ? 20 : 19;
 
   return (
     <div className="home">
@@ -703,6 +704,7 @@ const Home = () => {
               <th>Aircraft Reg</th>
               <th>MSN</th>
               <th>Record Type</th>
+              <th>Record Description</th>
               <th>Date Range</th>
               <th>Zone</th>
               <th>Aisle</th>
@@ -738,6 +740,7 @@ const Home = () => {
                       <td><input className="td-input" value={editData.aircraftRegistration} onChange={ed('aircraftRegistration')} placeholder="VT-ABC" /></td>
                       <td><input className="td-input" value={editData.msn} onChange={ed('msn')} placeholder="MSN" /></td>
                       <td><input className="td-input" value={editData.recordType} onChange={ed('recordType')} placeholder="Record type" /></td>
+                      <td><input className="td-input" value={editData.recordDescription} onChange={ed('recordDescription')} placeholder="Description" /></td>
                       <td>
                         <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
                           <input type="date" className="td-input" value={editData.dateRangeFrom} onChange={ed('dateRangeFrom')} />
@@ -785,6 +788,7 @@ const Home = () => {
                       <td>{record.aircraftRegistration || '-'}</td>
                       <td>{record.msn || '-'}</td>
                       <td>{record.recordType || '-'}</td>
+                      <td>{record.recordDescription || '-'}</td>
                       <td className="td-nowrap">
                         {record.dateRangeFrom && record.dateRangeTo
                           ? `${fmtDate(record.dateRangeFrom)} to ${fmtDate(record.dateRangeTo)}`
@@ -873,6 +877,10 @@ const Home = () => {
                 <div className="field-group">
                   <label>Record Type</label>
                   <input name="recordType" value={addForm.recordType} onChange={handleAddChange} placeholder="Tech Log Pages" />
+                </div>
+                <div className="field-group">
+                  <label>Record Description</label>
+                  <input name="recordDescription" value={addForm.recordDescription} onChange={handleAddChange} placeholder="Brief description of the record" />
                 </div>
                 <div className="field-group">
                   <label>Date Range From</label>
