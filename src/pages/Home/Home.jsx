@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiSearch,
-  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin, FiArrowUp, FiArrowDown,
+  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin, FiArrowUp, FiArrowDown, FiHome,
 } from 'react-icons/fi';
 import {
   getAllRecordsApi, createRecordApi, updateRecordApi, deleteRecordApi,
@@ -497,6 +497,7 @@ const Home = () => {
       <div className="home-header">
         <div className="wh-switcher-wrap" ref={whPickerRef}>
           <button className="wh-switcher-btn" onClick={() => setShowWhPicker((v) => !v)}>
+            <div className="wh-switcher-icon"><FiHome size={18} /></div>
             <div className="wh-switcher-text">
               <div className="wh-switcher-title-row">
                 <h1 className="home-title">

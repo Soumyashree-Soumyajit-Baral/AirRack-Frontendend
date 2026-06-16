@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiUser, FiMail, FiShield, FiCalendar, FiPhone, FiClock, FiLock, FiEye, FiEyeOff, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiMail, FiShield, FiCalendar, FiPhone, FiClock, FiLock, FiEye, FiEyeOff, FiCheck, FiAlertCircle, FiSettings } from 'react-icons/fi';
 import useAuthStore from '../../store/authStore';
 import { ROLE_LABELS } from '../../constants/roles';
 import { changePasswordApi } from '../../api/auth.api';
@@ -97,76 +97,86 @@ const Settings = () => {
   return (
     <div className="settings-page">
 
-      {/* Account Information */}
-      <div className="settings-section">
-        <div className="settings-section-header">
-          <span className="settings-dot" />
-          <h2 className="settings-section-title">Account Information</h2>
-        </div>
-        <div className="info-grid">
-          <InfoCard label="NAME"       icon={FiUser}     value={user?.name  || '-'} />
-          <InfoCard label="EMAIL"      icon={FiMail}     value={user?.email || '-'} />
-          <InfoCard label="ROLE"       icon={FiShield}   value={ROLE_LABELS[user?.role] || user?.role || '-'} />
-          <InfoCard label="JOINED"     icon={FiCalendar} value={fmtDate(user?.createdAt)} />
-          <InfoCard label="PHONE"      icon={FiPhone}    value={user?.phone || '-'} />
-          <InfoCard label="LAST LOGIN" icon={FiClock}    value={user?.lastLogin ? fmtDate(user.lastLogin) : '-'} />
+      <div className="settings-header">
+        <div className="settings-header-left">
+          <div className="settings-header-icon"><FiSettings size={18} /></div>
+          <div>
+            <h1 className="settings-header-title">Settings</h1>
+            <p className="settings-header-sub">Manage your account and preferences</p>
+          </div>
         </div>
       </div>
 
-      {/* Change Password */}
-      <div className="settings-section">
-        <div className="settings-section-header">
-          <span className="settings-dot" />
-          <h2 className="settings-section-title">Change Password</h2>
+      <div className="settings-body">
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <span className="settings-dot" />
+            <h2 className="settings-section-title">Account Information</h2>
+          </div>
+          <div className="info-grid">
+            <InfoCard label="NAME"       icon={FiUser}     value={user?.name  || '-'} />
+            <InfoCard label="EMAIL"      icon={FiMail}     value={user?.email || '-'} />
+            <InfoCard label="ROLE"       icon={FiShield}   value={ROLE_LABELS[user?.role] || user?.role || '-'} />
+            <InfoCard label="JOINED"     icon={FiCalendar} value={fmtDate(user?.createdAt)} />
+            <InfoCard label="PHONE"      icon={FiPhone}    value={user?.phone || '-'} />
+            <InfoCard label="LAST LOGIN" icon={FiClock}    value={user?.lastLogin ? fmtDate(user.lastLogin) : '-'} />
+          </div>
         </div>
 
-        <div className="pw-card">
-          {pwError && (
-            <div className="pw-alert pw-alert--error">
-              <FiAlertCircle size={14} /> {pwError}
-            </div>
-          )}
-          {pwSuccess && (
-            <div className="pw-alert pw-alert--success">
-              <FiCheck size={14} /> {pwSuccess}
-            </div>
-          )}
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <span className="settings-dot" />
+            <h2 className="settings-section-title">Change Password</h2>
+          </div>
 
-          <form className="pw-form" onSubmit={handlePwSubmit}>
-            <PasswordField
-              label="Current Password"
-              name="currentPassword"
-              value={pwForm.currentPassword}
-              onChange={handlePwChange}
-              show={show.current}
-              onToggle={() => toggleShow('current')}
-              placeholder="Enter current password"
-            />
-            <PasswordField
-              label="New Password"
-              name="newPassword"
-              value={pwForm.newPassword}
-              onChange={handlePwChange}
-              show={show.newPw}
-              onToggle={() => toggleShow('newPw')}
-              placeholder="Min. 6 characters"
-            />
-            <PasswordField
-              label="Confirm New Password"
-              name="confirmPassword"
-              value={pwForm.confirmPassword}
-              onChange={handlePwChange}
-              show={show.confirm}
-              onToggle={() => toggleShow('confirm')}
-              placeholder="Repeat new password"
-            />
+          <div className="pw-card">
+            {pwError && (
+              <div className="pw-alert pw-alert--error">
+                <FiAlertCircle size={14} /> {pwError}
+              </div>
+            )}
+            {pwSuccess && (
+              <div className="pw-alert pw-alert--success">
+                <FiCheck size={14} /> {pwSuccess}
+              </div>
+            )}
 
-            <div className="pw-form-footer">
-              <button type="submit" className="pw-submit-btn" disabled={saving}>
-                {saving ? 'Updating...' : 'Update Password'}
-              </button>
-            </div>
-          </form>
+            <form className="pw-form" onSubmit={handlePwSubmit}>
+              <PasswordField
+                label="Current Password"
+                name="currentPassword"
+                value={pwForm.currentPassword}
+                onChange={handlePwChange}
+                show={show.current}
+                onToggle={() => toggleShow('current')}
+                placeholder="Enter current password"
+              />
+              <PasswordField
+                label="New Password"
+                name="newPassword"
+                value={pwForm.newPassword}
+                onChange={handlePwChange}
+                show={show.newPw}
+                onToggle={() => toggleShow('newPw')}
+                placeholder="Min. 6 characters"
+              />
+              <PasswordField
+                label="Confirm New Password"
+                name="confirmPassword"
+                value={pwForm.confirmPassword}
+                onChange={handlePwChange}
+                show={show.confirm}
+                onToggle={() => toggleShow('confirm')}
+                placeholder="Repeat new password"
+              />
+
+              <div className="pw-form-footer">
+                <button type="submit" className="pw-submit-btn" disabled={saving}>
+                  {saving ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiAlertCircle,
-  FiMapPin, FiExternalLink, FiHome,
+  FiMapPin, FiExternalLink, FiHome, FiDatabase,
 } from 'react-icons/fi';
 import {
   getAllWarehousesApi, createWarehouseApi,
@@ -125,9 +125,12 @@ const Warehouses = () => {
 
       {/* Header */}
       <div className="wh-header">
-        <div>
-          <h1 className="wh-title">Warehouses</h1>
-          <p className="wh-subtitle">{warehouses.length} warehouse{warehouses.length !== 1 ? 's' : ''} registered</p>
+        <div className="wh-header-left">
+          <div className="wh-header-icon"><FiDatabase size={18} /></div>
+          <div>
+            <h1 className="wh-title">Warehouses</h1>
+            <p className="wh-subtitle">{warehouses.length} warehouse{warehouses.length !== 1 ? 's' : ''} registered</p>
+          </div>
         </div>
         {canManage && (
           <button className="wh-add-btn" onClick={openAdd}>

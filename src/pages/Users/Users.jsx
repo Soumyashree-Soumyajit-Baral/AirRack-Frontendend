@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiChevronRight, FiChevronDown, FiSearch, FiAlertCircle } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiChevronRight, FiChevronDown, FiSearch, FiAlertCircle, FiUsers } from 'react-icons/fi';
 import { getAllUsersApi, createUserApi, updateUserApi, deleteUserApi } from '../../api/users.api';
 import useAuthStore from '../../store/authStore';
 import { ROLE_LABELS, ROLE_PERMISSIONS } from '../../constants/roles';
@@ -128,7 +128,15 @@ const Users = () => {
   return (
     <div className="users-page">
       <div className="users-header">
-        <h1 className="users-title">Users Management</h1>
+        <div className="users-header-left">
+          <div className="users-header-icon"><FiUsers size={18} /></div>
+          <div>
+            <h1 className="users-title">Users Management</h1>
+            <p className="users-subtitle">
+              {loading ? 'Loading...' : `${users.length} ${users.length === 1 ? 'user' : 'users'} registered`}
+            </p>
+          </div>
+        </div>
         <button className="btn-add-user" onClick={openAdd}>
           <FiPlus size={16} /> Add User
         </button>
