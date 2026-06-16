@@ -957,8 +957,7 @@ const Home = () => {
             <button className="cd-close" onClick={() => setDeleteId(null)}><FiX size={16} /></button>
             <h2 className="cd-title">Delete Record</h2>
             <p className="cd-text">
-              This record will be <strong>permanently deleted</strong> and cannot be recovered.
-              The action will be logged in Delete Logs.
+              This record will be <strong>moved to Trash</strong>. You can restore it or permanently delete it from the <strong>Trash</strong> page.
             </p>
             <div className="cd-record-chip">
               {records.find((r) => r._id === deleteId)?.boxId || 'Record'}

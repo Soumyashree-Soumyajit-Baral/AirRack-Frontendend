@@ -6,11 +6,11 @@ import { ROLE_LABELS } from '../../constants/roles';
 import './Layout.css';
 
 const NAV_ITEMS = [
-  { label: 'Home',       path: '/home',       icon: FiHome,     minRole: 'tech_rep' },
-  { label: 'Warehouses', path: '/warehouses', icon: FiDatabase, minRole: 'tech_rep' },
-  { label: 'Users',      path: '/users',      icon: FiUsers,    minRole: 'admin' },
-  { label: 'Settings',   path: '/settings',   icon: FiSettings, minRole: 'tech_rep' },
-  { label: 'Trash',      path: '/trash',      icon: FiTrash2,   minRole: 'admin' },
+  { label: 'Home',            path: '/home',       icon: FiHome,     minRole: 'tech_rep', color: '#3b82f6', bg: 'rgba(59,130,246,0.15)'  },
+  { label: 'Warehouses',      path: '/warehouses', icon: FiDatabase, minRole: 'tech_rep', color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)'  },
+  { label: 'User Management', path: '/users',      icon: FiUsers,    minRole: 'admin',    color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  },
+  { label: 'Settings',        path: '/settings',   icon: FiSettings, minRole: 'tech_rep', color: '#10b981', bg: 'rgba(16,185,129,0.15)'  },
+  { label: 'Trash',           path: '/trash',      icon: FiTrash2,   minRole: 'admin',    color: '#ef4444', bg: 'rgba(239,68,68,0.15)'   },
 ];
 
 const Layout = ({ children }) => {
@@ -38,17 +38,20 @@ const Layout = ({ children }) => {
         </div>
 
         <nav className="sidebar-nav">
-          {visibleNav.map(({ label, path, icon: Icon }) => (
+          {visibleNav.map(({ label, path, icon: Icon, color, bg }) => (
             <NavLink
               key={path}
               to={path}
               title={collapsed ? label : undefined}
+              style={{ '--nav-color': color, '--nav-bg': bg }}
               className={({ isActive }) =>
                 `nav-item ${isActive ? 'nav-item--active' : ''} ${collapsed ? 'nav-item--collapsed' : ''}`
               }
             >
-              <Icon size={18} />
-              {!collapsed && <span>{label}</span>}
+              <span className="nav-icon-wrap">
+                <Icon size={16} />
+              </span>
+              {!collapsed && <span className="nav-label">{label}</span>}
             </NavLink>
           ))}
         </nav>

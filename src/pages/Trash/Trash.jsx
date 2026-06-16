@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FiTrash2, FiAlertCircle, FiSearch } from 'react-icons/fi';
-import { getDeletedLogsApi } from '../../api/audit.api';
+import { FiTrash2, FiAlertCircle, FiSearch, FiRotateCcw, FiX } from 'react-icons/fi';
+import { getDeletedLogsApi, restoreRecordApi, permanentDeleteLogApi } from '../../api/audit.api';
+import useAuthStore from '../../store/authStore';
 import './Trash.css';
 
 const fmtDateTime = (d) => {
@@ -12,13 +13,19 @@ const fmtDateTime = (d) => {
 };
 
 const Trash = () => {
+  const { hasPermission } = useAuthStore();
+  const canManage = hasPermission('manage_records');
+
   const [logs, setLogs]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
   const [search, setSearch]   = useState('');
 
+  const [confirmPermaId, setConfirmPermaId] = useState(null);
+  const [actionLoading, setActionLoading]   = useState(null);
+
   useEffect(() => {
-    const fetch = async () => {
+    const load = async () => {
       try {
         const { data } = await getDeletedLogsApi();
         setLogs(data.logs || []);
@@ -28,7 +35,7 @@ const Trash = () => {
         setLoading(false);
       }
     };
-    fetch();
+    load();
   }, []);
 
   const filtered = logs.filter((log) => {
@@ -43,6 +50,35 @@ const Trash = () => {
       log.performedByName?.toLowerCase().includes(q)
     );
   });
+
+  const handleRestore = async (id) => {
+    setActionLoading(id);
+    try {
+      await restoreRecordApi(id);
+      setLogs((prev) => prev.filter((l) => l._id !== id));
+    } catch {
+      setError('Failed to restore record. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!confirmPermaId) return;
+    setActionLoading(confirmPermaId);
+    try {
+      await permanentDeleteLogApi(confirmPermaId);
+      setLogs((prev) => prev.filter((l) => l._id !== confirmPermaId));
+    } catch {
+      setError('Failed to permanently delete record.');
+    } finally {
+      setActionLoading(null);
+      setConfirmPermaId(null);
+    }
+  };
+
+  const colSpan = canManage ? 9 : 8;
+  const confirmLog = logs.find((l) => l._id === confirmPermaId);
 
   return (
     <div className="trash-page">
@@ -71,6 +107,7 @@ const Trash = () => {
       {error && (
         <div className="trash-error">
           <FiAlertCircle size={14} /> {error}
+          <button className="trash-error-close" onClick={() => setError('')}><FiX size={13} /></button>
         </div>
       )}
 
@@ -87,13 +124,14 @@ const Trash = () => {
               <th>Full Location Code</th>
               <th>Deleted By</th>
               <th>Date / Time</th>
+              {canManage && <th className="trash-th-action">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="trash-td-center">Loading...</td></tr>
+              <tr><td colSpan={colSpan} className="trash-td-center">Loading...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={8} className="trash-td-center trash-td-empty">No deleted records found.</td></tr>
+              <tr><td colSpan={colSpan} className="trash-td-center trash-td-empty">No deleted records found.</td></tr>
             ) : (
               filtered.map((log, i) => (
                 <tr key={log._id}>
@@ -107,12 +145,67 @@ const Trash = () => {
                     <span className="trash-deleted-by">{log.performedByName || '-'}</span>
                   </td>
                   <td className="trash-td-time">{fmtDateTime(log.timestamp)}</td>
+                  {canManage && (
+                    <td className="trash-td-actions">
+                      <button
+                        className="trash-btn-restore"
+                        title="Restore record"
+                        disabled={actionLoading === log._id}
+                        onClick={() => handleRestore(log._id)}
+                      >
+                        <FiRotateCcw size={13} />
+                        <span>Restore</span>
+                      </button>
+                      <button
+                        className="trash-btn-perma"
+                        title="Permanently delete"
+                        disabled={actionLoading === log._id}
+                        onClick={() => setConfirmPermaId(log._id)}
+                      >
+                        <FiTrash2 size={13} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Permanent Delete Confirmation Modal */}
+      {confirmPermaId && (
+        <div className="trash-modal-overlay" onClick={() => setConfirmPermaId(null)}>
+          <div className="trash-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="trash-confirm-icon">
+              <FiTrash2 size={26} />
+            </div>
+            <button className="trash-confirm-close" onClick={() => setConfirmPermaId(null)}>
+              <FiX size={15} />
+            </button>
+            <h2 className="trash-confirm-title">Permanently Delete?</h2>
+            <p className="trash-confirm-text">
+              This record will be <strong>erased forever</strong> and cannot be recovered or restored.
+            </p>
+            {confirmLog && (
+              <div className="trash-confirm-chip">{confirmLog.boxId}</div>
+            )}
+            <div className="trash-confirm-actions">
+              <button className="trash-confirm-cancel" onClick={() => setConfirmPermaId(null)}>
+                Cancel
+              </button>
+              <button
+                className="trash-confirm-delete"
+                disabled={!!actionLoading}
+                onClick={handlePermanentDelete}
+              >
+                <FiTrash2 size={14} />
+                {actionLoading ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
