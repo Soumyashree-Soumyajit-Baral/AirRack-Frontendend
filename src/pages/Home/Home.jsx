@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiSearch,
-  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin, FiArrowUp, FiArrowDown, FiHome,
+  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin, FiArrowUp, FiArrowDown, FiHome, FiDownload,
 } from 'react-icons/fi';
 import {
   getAllRecordsApi, createRecordApi, updateRecordApi, deleteRecordApi,
@@ -329,6 +329,9 @@ const Home = () => {
   const [showSortPicker, setShowSortPicker] = useState(false);
   const sortPickerRef                       = useRef(null);
 
+  const [showExportPicker, setShowExportPicker] = useState(false);
+  const exportPickerRef                          = useRef(null);
+
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   const recordTypeOptions = useMemo(() =>
@@ -343,6 +346,9 @@ const Home = () => {
       }
       if (sortPickerRef.current && !sortPickerRef.current.contains(e.target)) {
         setShowSortPicker(false);
+      }
+      if (exportPickerRef.current && !exportPickerRef.current.contains(e.target)) {
+        setShowExportPicker(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -416,6 +422,173 @@ const Home = () => {
     if (sortBy === 'zone')  return [...filtered].sort((a, b) => (a.zone || '').localeCompare(b.zone || ''));
     return filtered;
   }, [filtered, sortBy]);
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '-';
+
+  const buildExportRows = () =>
+    sorted.map((r, i) => ({
+      'Sr. No':             i + 1,
+      'Box ID':             r.boxId             || '-',
+      'Aircraft Type':      r.aircraftType       || '-',
+      'Aircraft Reg.':      r.aircraftRegistration || '-',
+      'MSN':                r.msn               || '-',
+      'Record Type':        r.recordType        || '-',
+      'Record Description': r.recordDescription || '-',
+      'Date From':          fmtDate(r.dateRangeFrom),
+      'Date To':            fmtDate(r.dateRangeTo),
+      'Zone':               r.zone              || '-',
+      'Aisle':              r.aisle             || '-',
+      'Rack':               r.rack              || '-',
+      'Level':              r.level             || '-',
+      'Full Location Code': r.fullLocationCode  || '-',
+      'Box Status':         r.boxStatus         || '-',
+      'Condition':          r.condition         || '-',
+      'Last Movement':      fmtDate(r.lastMovementDate),
+      'Issued To':          r.issuedTo          || '-',
+      'Return Due':         fmtDate(r.returnDueDate),
+      'Remarks':            r.remarks           || '-',
+    }));
+
+  const exportExcel = async () => {
+    const ExcelJS = (await import('exceljs')).default;
+    const rows = buildExportRows();
+    const headers = Object.keys(rows[0] || {});
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Records', {
+      pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+    });
+
+    // Header row
+    ws.addRow(headers);
+    const headerRow = ws.getRow(1);
+    headerRow.eachCell((cell) => {
+      cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF16A34A' } };
+      cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: false };
+      cell.border = {
+        bottom: { style: 'thin', color: { argb: 'FF15803D' } },
+      };
+    });
+    headerRow.height = 22;
+
+    // Data rows
+    rows.forEach((r, i) => {
+      const row = ws.addRow(headers.map((h) => r[h]));
+      if (i % 2 === 1) {
+        row.eachCell((cell) => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
+        });
+      }
+      row.eachCell((cell) => {
+        cell.alignment = { vertical: 'middle', wrapText: false };
+      });
+    });
+
+    // Auto column widths
+    ws.columns.forEach((col, idx) => {
+      const header = headers[idx] || '';
+      const maxLen = Math.max(
+        header.length,
+        ...rows.map((r) => String(r[header] ?? '').length),
+      );
+      col.width = Math.min(Math.max(maxLen + 2, 10), 40);
+    });
+
+    const buf = await wb.xlsx.writeBuffer();
+    const url = URL.createObjectURL(new Blob([buf], { type: 'application/octet-stream' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AirRack_Records_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowExportPicker(false);
+  };
+
+  const exportPDF = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    const rows = buildExportRows();
+    const headers = Object.keys(rows[0] || {});
+
+    // A3 landscape: ~1190 x 842 pt
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a3' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 40;
+
+    // ── Logo (top-right) ──────────────────────────────────────
+    try {
+      const res = await fetch('/newAirRackLogo.png');
+      const blob = await res.blob();
+      const b64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      // draw logo: 130px wide, maintain aspect — placed top-right
+      doc.addImage(b64, 'PNG', pageW - margin - 130, 18, 130, 38);
+    } catch { /* skip logo if unavailable */ }
+
+    // ── Header text (top-left) ───────────────────────────────
+    doc.setFontSize(15);
+    doc.setTextColor(22, 101, 52);   // dark green
+    doc.setFont(undefined, 'bold');
+    doc.text(`AirRack Records — ${selectedWarehouse?.name || ''}`, margin, 36);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Exported: ${new Date().toLocaleString('en-GB')}   |   ${rows.length} record(s)`,
+      margin, 52,
+    );
+
+    // ── Divider line ─────────────────────────────────────────
+    doc.setDrawColor(22, 163, 74);
+    doc.setLineWidth(1);
+    doc.line(margin, 60, pageW - margin, 60);
+
+    // ── Table ────────────────────────────────────────────────
+    autoTable(doc, {
+      startY: 68,
+      head: [headers],
+      body: rows.map((r) => headers.map((h) => r[h])),
+      styles: { fontSize: 7, cellPadding: 3 },
+      headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [240, 253, 244] },
+      tableLineColor: [209, 250, 229],
+      tableLineWidth: 0.3,
+    });
+
+    // ── Signature / Stamp — pinned to bottom of last page ────
+    const pageH    = doc.internal.pageSize.getHeight();
+    const sigY     = pageH - 36;   // 36pt above the very bottom edge
+
+    doc.setPage(doc.internal.getNumberOfPages());
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont(undefined, 'normal');
+    const sigLabel = 'Signature / Stamp:';
+    doc.text(sigLabel, margin, sigY);
+    const labelW = doc.getTextWidth(sigLabel);
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.6);
+    doc.line(margin + labelW + 8, sigY, margin + labelW + 200, sigY);
+
+    // ── Footer on each page ───────────────────────────────────
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFontSize(7);
+      doc.setTextColor(160, 160, 160);
+      doc.text(
+        `Page ${p} of ${totalPages}   |   AirRack Warehouse Management`,
+        margin, doc.internal.pageSize.getHeight() - 14,
+      );
+    }
+
+    doc.save(`AirRack_Records_${new Date().toISOString().slice(0,10)}.pdf`);
+    setShowExportPicker(false);
+  };
 
   const startEdit = (record) => {
     setEditId(record._id);
@@ -543,6 +716,26 @@ const Home = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+          </div>
+          <div className="export-picker-wrap" ref={exportPickerRef}>
+            <button
+              className={`btn-export ${showExportPicker ? 'btn-export--active' : ''}`}
+              onClick={() => setShowExportPicker((v) => !v)}
+            >
+              <FiDownload size={14} />
+              <span>Export</span>
+              <FiChevronDown size={13} className={`export-chevron ${showExportPicker ? 'open' : ''}`} />
+            </button>
+            {showExportPicker && (
+              <div className="export-dropdown">
+                <button className="export-option" onClick={exportExcel}>
+                  <span className="export-option-icon excel">XLS</span> Excel
+                </button>
+                <button className="export-option" onClick={exportPDF}>
+                  <span className="export-option-icon pdf">PDF</span> PDF
+                </button>
+              </div>
+            )}
           </div>
           <div className="sort-picker-wrap" ref={sortPickerRef}>
             <button
