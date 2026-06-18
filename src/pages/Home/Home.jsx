@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiSearch,
-  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin, FiArrowUp, FiArrowDown, FiHome, FiDownload,
+  FiAlertCircle, FiClock, FiRotateCcw, FiFilter, FiChevronDown, FiMapPin, FiArrowUp, FiArrowDown, FiHome, FiDownload, FiUpload,
 } from 'react-icons/fi';
 import {
-  getAllRecordsApi, createRecordApi, updateRecordApi, deleteRecordApi,
+  getAllRecordsApi, createRecordApi, bulkCreateRecordsApi, updateRecordApi, deleteRecordApi,
 } from '../../api/racksData.api';
 import { getRecordTimelineApi, getDeletedLogsApi } from '../../api/audit.api';
 import { getAllWarehousesApi } from '../../api/warehouse.api';
@@ -302,7 +302,11 @@ const Home = () => {
   const [records, setRecords]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
+  const [success, setSuccess]     = useState('');
   const [search, setSearch]       = useState('');
+
+  const [importing, setImporting] = useState(false);
+  const importInputRef            = useRef(null);
 
   const [editId, setEditId]       = useState(null);
   const [editData, setEditData]   = useState({});
@@ -590,6 +594,139 @@ const Home = () => {
     setShowExportPicker(false);
   };
 
+  const IMPORT_FIELD_MAP = {
+    'box id':              'boxId',
+    'aircraft type':       'aircraftType',
+    'aircraft reg.':       'aircraftRegistration',
+    'aircraft reg':        'aircraftRegistration',
+    'aircraft registration': 'aircraftRegistration',
+    'msn':                 'msn',
+    'record type':         'recordType',
+    'record description':  'recordDescription',
+    'date from':           'dateRangeFrom',
+    'date to':              'dateRangeTo',
+    'zone':                'zone',
+    'aisle':               'aisle',
+    'rack':                'rack',
+    'level':                'level',
+    'box status':          'boxStatus',
+    'condition':           'condition',
+    'last movement':       'lastMovementDate',
+    'issued to':           'issuedTo',
+    'return due':          'returnDueDate',
+    'remarks':             'remarks',
+  };
+  const IMPORT_DATE_FIELDS = ['dateRangeFrom', 'dateRangeTo', 'lastMovementDate', 'returnDueDate'];
+
+  const parseImportDate = (val) => {
+    if (val instanceof Date) return isNaN(val) ? undefined : val;
+    if (typeof val === 'string') {
+      const m = val.trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+      if (m) {
+        const [, d, mo, y] = m;
+        const year = y.length === 2 ? `20${y}` : y;
+        const dt = new Date(`${year}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`);
+        return isNaN(dt) ? undefined : dt;
+      }
+      const dt = new Date(val);
+      return isNaN(dt) ? undefined : dt;
+    }
+    return undefined;
+  };
+
+  const triggerImport = () => importInputRef.current?.click();
+
+  const downloadImportTemplate = async () => {
+    const XLSX = await import('xlsx');
+    const headers = [
+      'Box ID', 'Aircraft Type', 'Aircraft Reg.', 'MSN', 'Record Type', 'Record Description',
+      'Date From', 'Date To', 'Zone', 'Aisle', 'Rack', 'Level',
+      'Box Status', 'Condition', 'Last Movement', 'Issued To', 'Return Due', 'Remarks',
+    ];
+    const sampleRow = {
+      'Box ID': 'BOX 001',
+      'Aircraft Type': 'B737-800',
+      'Aircraft Reg.': 'VT-ABC',
+      'MSN': '12345',
+      'Record Type': 'Technical Log Book',
+      'Record Description': 'Sample record description',
+      'Date From': '01/01/2026',
+      'Date To': '31/12/2026',
+      'Zone': 'Z01',
+      'Aisle': 'A01L',
+      'Rack': 'R001',
+      'Level': 'L01',
+      'Box Status': 'Active',
+      'Condition': 'Good',
+      'Last Movement': '01/06/2026',
+      'Issued To': 'John Doe',
+      'Return Due': '30/06/2026',
+      'Remarks': 'Sample remarks',
+    };
+    const ws = XLSX.utils.json_to_sheet([sampleRow], { header: headers });
+    ws['!cols'] = headers.map((h) => ({ wch: Math.max(h.length + 2, 14) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+    XLSX.writeFile(wb, 'AirRack_Import_Template.xlsx');
+  };
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setImporting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const XLSX = await import('xlsx');
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const sheetRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+      const payload = sheetRows.map((row) => {
+        const doc = {};
+        Object.entries(row).forEach(([header, value]) => {
+          const key = IMPORT_FIELD_MAP[header.trim().toLowerCase()];
+          if (!key || value === '' || value === '-' || value == null) return;
+          if (IMPORT_DATE_FIELDS.includes(key)) {
+            const d = parseImportDate(value);
+            if (d) doc[key] = d;
+          } else if (key === 'boxStatus') {
+            const match = BOX_STATUS_OPTIONS.find((o) => o.toLowerCase() === String(value).trim().toLowerCase());
+            if (match) doc[key] = match;
+          } else if (key === 'condition') {
+            const match = CONDITION_OPTIONS.find((o) => o.toLowerCase() === String(value).trim().toLowerCase());
+            if (match) doc[key] = match;
+          } else {
+            doc[key] = String(value).trim();
+          }
+        });
+        return doc;
+      }).filter((doc) => doc.boxId);
+
+      if (payload.length === 0) {
+        setError('No valid rows found. Make sure the sheet has a "Box ID" column.');
+        return;
+      }
+
+      const { data } = await bulkCreateRecordsApi({
+        records: payload,
+        warehouseId: selectedWarehouse?._id,
+      });
+      setSuccess(
+        `Imported ${data.insertedCount} record(s)` +
+        (data.failedCount ? `, ${data.failedCount} row(s) failed.` : '.'),
+      );
+      fetchRecords(selectedWarehouse?._id);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to import file.');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const startEdit = (record) => {
     setEditId(record._id);
     setEditData({
@@ -737,6 +874,19 @@ const Home = () => {
               </div>
             )}
           </div>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
+          <button className="btn-import" onClick={triggerImport} disabled={importing}>
+            <FiUpload size={14} /> {importing ? 'Importing...' : 'Import'}
+          </button>
+          <button className="btn-template" onClick={downloadImportTemplate} title="Download a sample Excel template">
+            <FiDownload size={13} /> Template
+          </button>
           <div className="sort-picker-wrap" ref={sortPickerRef}>
             <button
               className={`btn-sort ${showSortPicker ? 'btn-sort--active' : ''}`}
@@ -786,6 +936,13 @@ const Home = () => {
         <div className="alert-error">
           <FiAlertCircle size={15} /> {error}
           <button onClick={() => setError('')}><FiX size={13} /></button>
+        </div>
+      )}
+
+      {success && (
+        <div className="alert-success">
+          <FiSave size={15} /> {success}
+          <button onClick={() => setSuccess('')}><FiX size={13} /></button>
         </div>
       )}
 
