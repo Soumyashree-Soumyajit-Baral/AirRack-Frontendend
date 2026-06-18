@@ -14,7 +14,7 @@ import './Home.css';
 const EMPTY_FORM = {
   boxId: '', aircraftType: '', aircraftRegistration: '', msn: '',
   recordType: '', recordDescription: '', dateRangeFrom: '', dateRangeTo: '',
-  zone: '', aisle: '', rack: '', level: '',
+  zone: '', aisle: '', rack: '', level: '', fullLocationCode: '',
   boxStatus: 'Active', condition: 'Good',
   lastMovementDate: '', issuedTo: '', returnDueDate: '', remarks: '',
 };
@@ -609,6 +609,7 @@ const Home = () => {
     'aisle':               'aisle',
     'rack':                'rack',
     'level':                'level',
+    'full location code':  'fullLocationCode',
     'box status':          'boxStatus',
     'condition':           'condition',
     'last movement':       'lastMovementDate',
@@ -640,7 +641,7 @@ const Home = () => {
     const XLSX = await import('xlsx');
     const headers = [
       'Box ID', 'Aircraft Type', 'Aircraft Reg.', 'MSN', 'Record Type', 'Record Description',
-      'Date From', 'Date To', 'Zone', 'Aisle', 'Rack', 'Level',
+      'Date From', 'Date To', 'Zone', 'Aisle', 'Rack', 'Level', 'Full Location Code',
       'Box Status', 'Condition', 'Last Movement', 'Issued To', 'Return Due', 'Remarks',
     ];
     const sampleRow = {
@@ -656,6 +657,7 @@ const Home = () => {
       'Aisle': 'A01L',
       'Rack': 'R001',
       'Level': 'L01',
+      'Full Location Code': 'Z01-A01L-R001-L01',
       'Box Status': 'Active',
       'Condition': 'Good',
       'Last Movement': '01/06/2026',
@@ -1256,6 +1258,10 @@ const Home = () => {
                 <div className="field-group">
                   <label>Level</label>
                   <input name="level" value={addForm.level} onChange={handleAddChange} placeholder="L07" />
+                </div>
+                <div className="field-group">
+                  <label>Full Location Code</label>
+                  <input name="fullLocationCode" value={addForm.fullLocationCode} onChange={handleAddChange} placeholder="e.g. Z01-A2R-R005-L07" />
                 </div>
                 <div className="field-group">
                   <label>Box Status</label>
